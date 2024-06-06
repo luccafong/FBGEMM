@@ -14,10 +14,6 @@ import unittest
 import hypothesis.strategies as st
 import numpy as np
 import torch
-from deeplearning.fbgemm.fbgemm_gpu.test.tbe.common import (
-    format_ref_tensors_in_mixed_B_layout,
-    gen_mixed_B_batch_sizes,
-)
 from fbgemm_gpu.split_embedding_configs import SparseType
 from fbgemm_gpu.split_embedding_utils import (
     b_indices,
@@ -32,13 +28,22 @@ from fbgemm_gpu.split_table_batched_embeddings_ops_training import (
 from hypothesis import assume, given, HealthCheck, settings, Verbosity
 
 from .. import common  # noqa E402
-from ..common import open_source
+from ..common import (
+    format_ref_tensors_in_mixed_B_layout,
+    gen_mixed_B_batch_sizes,
+    open_source,
+)
 
 if open_source:
     # pyre-ignore[21]
-    from test_utils import gradcheck, optests, use_cpu_strategy
+    from test_utils import gradcheck, optests, skipIfRocm, use_cpu_strategy
 else:
-    from fbgemm_gpu.test.test_utils import gradcheck, optests, use_cpu_strategy
+    from fbgemm_gpu.test.test_utils import (
+        gradcheck,
+        optests,
+        skipIfRocm,
+        use_cpu_strategy,
+    )
 
 
 VERBOSITY: Verbosity = Verbosity.verbose
@@ -46,6 +51,7 @@ VERBOSITY: Verbosity = Verbosity.verbose
 
 @optests.generate_opcheck_tests(fast=True)
 class BackwardDenseTest(unittest.TestCase):
+    @skipIfRocm("Currently runs into memory access issues")
     @given(
         T=st.integers(min_value=1, max_value=3),
         D=st.integers(min_value=2, max_value=128),
