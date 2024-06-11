@@ -231,50 +231,46 @@ at::Tensor car_tensor();
 TORCH_LIBRARY_FRAGMENT(fbgemm, m) {
   m.def(
       "nccl_init(int rank, int world_size, str rendevouz, int comm_idx=0) -> ()");
+  m.impl("nccl_init", nccl_init);
 
   m.def("nccl_get_unique_id() -> Tensor");
+  m.impl("nccl_get_unique_id", nccl_get_unique_id);
 
   m.def(
       "nccl_comm_init_rank(int world_size, int rank, Tensor id_, int comm_idx=0) -> ()");
+  m.impl("nccl_comm_init_rank", nccl_comm_init_rank);
 
-  m.def("nccl_allgather(Tensor y_allgather, Tensor y, int comm_idx=0) -> ()");
-
-  m.def(
-      "nccl_alltoall(Tensor y_all2all, Tensor y, int world_size, int comm_idx=0) -> ()");
-
-  m.def(
-      "nccl_reducescatter(Tensor y_reducescatter, Tensor y, int comm_idx=0) -> ()");
+  m.def("nccl_allgather(Tensor dst, Tensor src, int comm_idx=0) -> ()");
+  m.impl("nccl_allgather", nccl_allgather);
 
   m.def(
-      "nccl_allreduce(Tensor y_allreduce, Tensor y, Tensor? z=None, int comm_idx=0) -> ()");
+      "nccl_alltoall(Tensor dst, Tensor src, int world_size, int comm_idx=0) -> ()");
+  m.impl("nccl_alltoall", nccl_alltoall);
+
+  m.def("nccl_reducescatter(Tensor dst, Tensor src, int comm_idx=0) -> ()");
+  m.impl("nccl_reducescatter", nccl_reducescatter);
+
+  m.def(
+      "nccl_allreduce(Tensor dst, Tensor src, Tensor? bias=None, int comm_idx=0) -> ()");
+  m.impl("nccl_allreduce", nccl_allreduce);
 
   // car: customized all reduce
   m.def("car_tensor() -> Tensor");
+  m.impl("car_tensor", car_tensor);
 
   m.def("car_ipc_handle(Tensor buffer) -> Tensor");
+  m.impl("car_ipc_handle", car_ipc_handle);
 
   m.def(
       "car_init(int rank, int world_size, Tensor local_barrier, Tensor[] all_barrier_handles, Tensor local_buffer, Tensor[] all_buffer_handles) -> ()");
-
-  m.def(
-      "one_shot_car_allreduce(Tensor y_allreduce, Tensor y, Tensor? z=None, int comm_idx=0) -> ()");
-
-  m.def(
-      "two_shot_car_allreduce(Tensor y_allreduce, Tensor y, Tensor? z=None, int comm_idx=0) -> ()");
-}
-
-TORCH_LIBRARY_IMPL(fbgemm, CUDA, m) {
-  m.impl("nccl_init", nccl_init);
-  m.impl("nccl_get_unique_id", nccl_get_unique_id);
-  m.impl("nccl_comm_init_rank", nccl_comm_init_rank);
-  m.impl("nccl_allgather", nccl_allgather);
-  m.impl("nccl_alltoall", nccl_alltoall);
-  m.impl("nccl_reducescatter", nccl_reducescatter);
-  m.impl("nccl_allreduce", nccl_allreduce);
-  m.impl("car_tensor", car_tensor);
-  m.impl("car_ipc_handle", car_ipc_handle);
   m.impl("car_init", car_init);
+
+  m.def(
+      "one_shot_car_allreduce(Tensor dst, Tensor src, Tensor? bias=None, int comm_idx=0) -> ()");
   m.impl("one_shot_car_allreduce", one_shot_car_allreduce);
+
+  m.def(
+      "two_shot_car_allreduce(Tensor dst, Tensor src, Tensor? bias=None, int comm_idx=0) -> ()");
   m.impl("two_shot_car_allreduce", two_shot_car_allreduce);
 }
 
